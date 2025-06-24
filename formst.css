@@ -1,0 +1,92 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f7f8;
+  color: #333;
+  padding: 20px;
+}
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top: 100px;
+}
+
+/* Style form input */
+div .form-group {
+  margin-bottom: 20px;
+}
+div label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+div input[type="text"],
+div input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  transition: border-color .3s;
+}
+div input[type="text"]:focus,
+div input[type="number"]:focus {
+  border-color: #5b9bd5;
+  outline: none;
+}
+
+/* Style input file upload */
+input[type="file"] {
+  font-size: 1rem;
+  color: #555;
+}
+input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 12px;
+  border: 1px solid #5b9bd5;
+  border-radius: 4px;
+  background-color: #5b9bd5;
+  color: white;
+  cursor: pointer;
+  transition: background-color .3s, border-color .3s;
+}
+input[type="file"]::file-selector-button:hover {
+  background-color: #407bc8;
+  border-color: #407bc8;
+}
+
+/* Style nút Thêm – Hủy */
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color .3s;
+}
+button.submit {
+  background-color: #28a745;
+  color: #fff;
+}
+button.submit:hover {
+  background-color: #218838;
+}
+button.cancel {
+  background-color: #dc3545;
+  color: #fff;
+}
+button.cancel:hover {
+  background-color: #c82333;
+}
