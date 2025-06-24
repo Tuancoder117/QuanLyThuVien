@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Tiên nhân bất khả lộ",
+    "soLuong": "1",
+    "bookImg": "http://localhost:3000/uploads/1750758316503.jpg"
+  },
+  {
+    "name": "Tiên nhân bất khả lộ",
+    "soLuong": "1",
+    "bookImg": "http://localhost:3000/uploads/1750758371223.jpg"
+  },
+  {
+    "name": "Thần điêu đại hiệp",
+    "soLuong": "1",
+    "bookImg": "http://localhost:3000/uploads/1750758468587.jpg"
+  },
+  {
+    "name": "Một tay che trời",
+    "soLuong": "1",
+    "bookImg": "http://localhost:3000/uploads/1750758752887.jpg"
+  },
+  {
+    "name": "Tay trái chỉ trăng",
+    "soLuong": "1",
+    "bookImg": "http://localhost:3000/uploads/1750758965776.jpg"
+  }
+]
