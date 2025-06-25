@@ -26,7 +26,16 @@
 
 
         <div class="book">
-            <h1>Sách hay hàng tuần</h1>
+            <h1>Tàng thư viện</h1>
+            <div id="editContainer" style="display: none; margin-top: 20px;">
+                <h2>Sửa sách</h2>
+                <form id="editForm">
+                    <input type="text" id="editName" placeholder="Tên mới" required>
+                    <input type="number" id="editQty" placeholder="Số lượng mới" required>
+                    <input type="file" id="editImage">
+                    <button type="submit">Cập nhật</button>
+                </form>
+            </div>
 
             <div id="danhSachSach"> </div>
         </div>

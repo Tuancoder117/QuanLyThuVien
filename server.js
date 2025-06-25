@@ -1,119 +1,107 @@
-const fs = require("fs");
-const fsPromises = require("fs/promises");
 const express = require("express");
 const cors = require("cors");
-const multer = require("multer");
+const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 
 const app = express();
 const PORT = 3000;
-const BOOKS_FILE = "books.json";
-let books = [];
+const BOOKS_FILE = path.join(__dirname, "books.json");
+
+// Tạo thư mục uploads nếu chưa có
+const UPLOAD_DIR = path.join(__dirname, "uploads");
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
+
+// Cấu hình Multer để lưu ảnh upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+});
+const upload = multer({ storage });
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
-// Tạo thư mục uploads nếu chưa có
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
-}
-
-// Cấu hình multer để lưu ảnh
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + path.extname(file.originalname);
-    cb(null, uniqueName);
-  }
-});
-const upload = multer({ storage });
-
-// Load dữ liệu từ file
-async function loadBooksFromFile() {
+// 📚 Đọc danh sách sách từ books.json
+function readBooks() {
   try {
-    const data = await fsPromises.readFile(BOOKS_FILE, "utf-8");
-    books = JSON.parse(data);
-    console.log("📚 Đã load dữ liệu từ books.json");
+    if (!fs.existsSync(BOOKS_FILE)) return [];
+    const data = fs.readFileSync(BOOKS_FILE, "utf-8");
+    return JSON.parse(data);
   } catch (err) {
-    console.log("📂 Chưa có books.json, sẽ tạo mới sau");
-    books = [];
+    console.error("Lỗi khi đọc books.json:", err);
+    return [];
   }
 }
 
-// Lưu dữ liệu ra file
-function saveBooksToFile() {
-  fsPromises.writeFile(BOOKS_FILE, JSON.stringify(books, null, 2))
-    .then(() => console.log("💾 Đã lưu books vào books.json"))
-    .catch(err => console.error("❌ Lỗi ghi file:", err));
+// 📝 Ghi danh sách sách vào books.json
+function writeBooks(books) {
+  try {
+    fs.writeFileSync(BOOKS_FILE, JSON.stringify(books, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Lỗi khi ghi books.json:", err);
+  }
 }
 
-// ROUTES
-
-// Thêm sách
-app.post("/add-book", upload.single("image"), (req, res) => {
-  const { name, soLuong } = req.body;
-  const imageUrl = req.file ? `http://localhost:${PORT}/uploads/${req.file.filename}` : null;
-
-  books.push({ name, soLuong, bookImg: imageUrl });
-
-  saveBooksToFile();
-
-  res.json({ message: "Book added" });
-});
-
-// Lấy danh sách sách
+// ✅ API: Lấy danh sách sách
 app.get("/books", (req, res) => {
+  const books = readBooks();
   res.json(books);
 });
 
-// Xóa sách
-app.delete("/delete-book/:index", (req, res) => {
-  const index = parseInt(req.params.index);
-  if (!isNaN(index) && books[index]) {
-    books.splice(index, 1);
-    saveBooksToFile(); // << QUAN TRỌNG
-    res.json({ message: "Đã xóa sách" });
-  } else {
-    res.status(404).json({ message: "Không tìm thấy sách để xóa" });
-  }
-});
-
-// Sửa sách
+// ✅ API: Sửa sách
 app.put("/edit-book/:index", upload.single("image"), (req, res) => {
   const index = parseInt(req.params.index);
   const { name, soLuong } = req.body;
 
-  if (!isNaN(index) && books[index]) {
-    const book = books[index];
+  const books = readBooks();
 
-    // Cập nhật tên và số lượng nếu có
-    if (name) book.name = name;
-    if (soLuong) book.soLuong = soLuong;
+  if (isNaN(index) || !books[index]) {
+    return res.status(404).json({ message: "Không tìm thấy sách để sửa" });
+  }
 
-    // Nếu người dùng gửi ảnh mới
-    if (req.file) {
-      const oldImagePath = book.bookImg?.replace(`http://localhost:${PORT}/`, ""); // đường dẫn cũ
-      if (oldImagePath && fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath); // xóa ảnh cũ khỏi thư mục uploads/
-      }
+  const book = books[index];
 
-      // Gán ảnh mới
-      book.bookImg = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+  // Cập nhật thông tin
+  if (name) book.name = name;
+  if (soLuong) book.soLuong = soLuong;
+
+  // Nếu có ảnh mới
+  if (req.file) {
+    const oldImagePath = book.bookImg?.replace(`http://localhost:${PORT}/`, "");
+    if (oldImagePath && fs.existsSync(oldImagePath)) {
+      fs.unlinkSync(oldImagePath); // Xoá ảnh cũ
     }
 
-    saveBooksToFile(); // ghi lại vào books.json
-    res.json({ message: "Đã sửa sách" });
-  } else {
-    res.status(404).json({ message: "Không tìm thấy sách để sửa" });
+    book.bookImg = `http://localhost:${PORT}/uploads/${req.file.filename}`;
   }
+
+  books[index] = book;
+  writeBooks(books);
+
+  res.json({ message: "Đã sửa sách thành công", book });
 });
 
+// ✅ API: Thêm sách mới (nếu cần)
+app.post("/add-book", upload.single("image"), (req, res) => {
+  const { name, soLuong } = req.body;
+  const books = readBooks();
 
-// Khởi động server
-loadBooksFromFile().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Server đang chạy tại http://localhost:${PORT}`);
-  });
+  const book = {
+    name,
+    soLuong,
+    bookImg: req.file ? `http://localhost:${PORT}/uploads/${req.file.filename}` : null,
+  };
+
+  books.push(book);
+  writeBooks(books);
+
+  res.json({ message: "Đã thêm sách", book });
+});
+
+// ✅ Khởi động server
+app.listen(PORT, () => {
+  console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
 });
